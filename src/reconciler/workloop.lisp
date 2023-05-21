@@ -17,19 +17,6 @@
       (fiber-set-flag work-in-progress 'ref)
       (fiber-set-flag work-in-progress 'ref-static))))
 
-(declaim (ftype (function (fiber t) (or fiber null)) mount-child-fibers))
-(defun mount-child-fibers (parent next-children)
-  (declare (ignore parent))
-  (declare (ignore next-children))
-  (error "not implemented"))
-
-(declaim (ftype (function (fiber (or fiber null) t) (or fiber null)) reconcile-child-fibers))
-(defun reconcile-child-fibers (parent current-first-child next-children)
-  (declare (ignore parent))
-  (declare (ignore current-first-child))
-  (declare (ignore next-children))
-  (error "not implemented"))
-
 (declaim (ftype (function ((or fiber null) fiber t) t) reconcile-children))
 (defun reconcile-children (current work-in-progress next-children)
   (if current

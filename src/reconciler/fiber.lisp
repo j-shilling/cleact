@@ -11,7 +11,9 @@
     (defconstant +fiber-flags+
       '(content-reset
         ref
-        ref-static)))
+        ref-static
+        child-deletion
+        placement)))
 
   (defun fiber-tag-p (tag)
     (member tag +fiber-tags+))
@@ -41,6 +43,14 @@
           :initarg :flags
           :initform (make-hash-table)
           :type hash-table)
+   (key :accessor fiber-key
+        :initarg :key
+        :initform nil
+        :type (or symbol null))
+   (index :accessor fiber-index
+          :initarg :index
+          :initform (error "index is required")
+          :type (integer 0 *))
    (memoized-props :accessor fiber-memoized-props
                    :initarg :memoized-props
                    :initform nil
@@ -53,6 +63,10 @@
               :initarg :alternate
               :initform nil
               :type (or null fiber))
+   (deletions :accessor fiber-deletions
+              :initarg :deletions
+              :initform nil
+              :type list) ; list of fibers
    (ref :accessor fiber-ref
         :initarg :ref
         :initform nil
@@ -85,3 +99,14 @@
 (declaim (ftype (function (fiber) t) fiber-clear-flags))
 (defun fiber-clear-flags (fiber)
   (setf (fiber-flags fiber) (make-hash-table)))
+
+(declaim (ftype (function (fiber t) fiber) create-work-in-progress))
+(defun create-work-in-progress (current pending-props)
+  (declare (ignore current))
+  (declare (ignore pending-props))
+  (error "not implemented"))
+
+(declaim (ftype (function (string) fiber) create-fiber-from-text) )
+(defun create-fiber-from-text (text-content)
+  (declare (ignore text-content))
+  (error "not implemented"))
