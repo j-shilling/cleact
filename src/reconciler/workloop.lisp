@@ -161,24 +161,10 @@
        (begin-update-host-text current work-in-progress)))))
 
 (declaim (ftype (function (nullable-fiber fiber) nullable-fiber) complete-work))
-(defun complete-work (current work-in-progress)
-  (let ((new-props (fiber-pending-props work-in-progress)))
-    (ecase (fiber-tag work-in-progress)
-      (functional-component
-       (progn
-         (bubble-properties work-in-progress)
-         nil))
-      (host-component
-       (progn
-         (if (and current (fiber-state-node work-in-progress))
-             (progn
-               (update-host-component current work-in-progress
-                                      (fiber-type work-in-progress)
-                                      new-props)
-               (unless (equal (fiber-ref current) (fiber-ref work-in-progress))
-                 (mark-ref work-in-progress))))
-         (bubble-properties work-in-progress)
-         nil)))))
+(defun complete-work (current completed-work)
+  (declare (ignore current))
+  (declare (ignore completed-work))
+  (error "not implemented"))
 
 (declaim (ftype (function (fiber) t) complete-unit-of-unit))
 (defun complete-unit-of-work (unit-of-work)
