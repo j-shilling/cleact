@@ -44,17 +44,27 @@
         placement
         performed-work)))
 
+  (unless (boundp '+fiber-static-flags+)
+    (defconstant +fiber-static-flags+
+      '(ref-static)))
+
   (defun fiber-tag-p (tag)
     (member tag +fiber-tags+))
 
   (defun fiber-flag-p (flag)
     (member flag +fiber-flags+))
 
+  (defun fiber-static-flag-p (flag)
+    (member flag +fiber-static-flags+))
+
   (deftype fiber-tag ()
     '(satisfies fiber-tag-p))
 
   (deftype fiber-flag ()
     '(satisfies fiber-flag-p))
+
+  (deftype fiber-static-flag ()
+    '(satisfies fiber-static-flag-p))
 
   (deftype fiber-type ()
     'symbol)

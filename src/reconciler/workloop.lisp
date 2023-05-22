@@ -14,6 +14,18 @@
 (defvar *renderer* nil)
 
 ;;
+;; Utilities
+;;
+
+(declaim (ftype (function (association-list association-list) boolean) props-equal-p))
+(defun props-equal-p (alist-a alist-b)
+  (and (= (length alist-a) (length alist-b))
+       (every (lambda (pair)
+                (destructuring-bind (k v) pair
+                  (equal v (access k alist-b))))
+              alist-a)))
+
+;;
 ;; Tag fibers
 ;;
 
@@ -92,8 +104,39 @@
 ;;
 
 (declaim (ftype (function (fiber fiber string string) t) complete-update-host-text))
+(defun complete-update-host-text (current work-in-progress old-text new-text)
+  (declare (ignore current))
+  (unless (equal old-text new-text)
+    (mark-update work-in-progress)))
+
 (declaim (ftype (function (fiber fiber fiber-type association-list) t) complete-update-host-component))
-(declaim (ftype (function (fiber) t) bubble-properties))
+(defun complete-update-host-component (current work-in-progress type new-props)
+  (let ((old-props (fiber-memoized-props current)))
+   (when (not (props-equal-p old-props new-props))
+     (let ((update-payload (prepare-update *renderer*
+                                           (fiber-state-node work-in-progress)
+                                           type
+                                           old-props
+                                           new-props)))
+       (setf (fiber-update-queue work-in-progress) update-payload)
+       (when update-payload
+         (mark-update work-in-progress))))))
+
+(declaim (ftype (function (fiber) boolean) bubble-properties))
+(defun bubble-properties (completed-work)
+  (let ((did-bailout-p (and (fiber-alternate completed-work)
+                            (fiber-child (fiber-alternate completed-work))))
+        (child (fiber-child completed-work)))
+    (loop while child
+          do (flet ((add-flag (flag)
+                      (declare (type fiber-flag flag))
+                      (when (or (fiber-static-flag-p flag) (not did-bailout-p))
+                       (fiber-set-subtree-flag completed-work flag))))
+               (map nil #'add-flag (hash-table-keys (fiber-flags child)))
+               (map nil #'add-flag (hash-table-keys (fiber-subtree-flags child)))
+               (setf (fiber-parent child) completed-work)
+               (setf child (fiber-sibling child))))
+    did-bailout-p))
 
 ;;
 ;; High Level Work Loop Stages
@@ -101,36 +144,41 @@
 
 (declaim (ftype (function (nullable-fiber fiber) nullable-fiber) begin-work))
 (defun begin-work (current work-in-progress)
-  (flet ((props-equal-p (alist-a alist-b)
-           (declare (type association-list alist-a))
-           (declare (type association-list alist-b))
-           (and (= (length alist-a) (length alist-b))
-                (every (lambda (pair)
-                         (destructuring-bind (k v) pair
-                           (equal v (access k alist-b))))
-                       alist-a))))
-    (declare (type (function (association-list association-list) boolean) props-equal-p))
-    (let ((new-props (fiber-pending-props work-in-progress)))
-      (if current
-          (let ((old-props (fiber-memoized-props current))
-                (new-props (fiber-pending-props work-in-progress)))
-            (setf *did-receive-update-p* (not (props-equal-p old-props new-props))))
-          (setf *did-receive-update-p* nil))
-      (ecase (fiber-tag work-in-progress)
-        (functional-component
-         (begin-update-function-component current work-in-progress
-                                    (fiber-type work-in-progress)
-                                    new-props))
-        (host-component
-         (begin-update-host-component current work-in-progress))
-        (host-text
-         (begin-update-host-text current work-in-progress))))))
+  (let ((new-props (fiber-pending-props work-in-progress)))
+    (if current
+        (let ((old-props (fiber-memoized-props current))
+              (new-props (fiber-pending-props work-in-progress)))
+          (setf *did-receive-update-p* (not (props-equal-p old-props new-props))))
+        (setf *did-receive-update-p* nil))
+    (ecase (fiber-tag work-in-progress)
+      (functional-component
+       (begin-update-function-component current work-in-progress
+                                        (fiber-type work-in-progress)
+                                        new-props))
+      (host-component
+       (begin-update-host-component current work-in-progress))
+      (host-text
+       (begin-update-host-text current work-in-progress)))))
 
 (declaim (ftype (function (nullable-fiber fiber) nullable-fiber) complete-work))
-(defun complete-work (current completed-work)
-  (declare (ignore current))
-  (declare (ignore completed-work))
-  (error "not implemented"))
+(defun complete-work (current work-in-progress)
+  (let ((new-props (fiber-pending-props work-in-progress)))
+    (ecase (fiber-tag work-in-progress)
+      (functional-component
+       (progn
+         (bubble-properties work-in-progress)
+         nil))
+      (host-component
+       (progn
+         (if (and current (fiber-state-node work-in-progress))
+             (progn
+               (update-host-component current work-in-progress
+                                      (fiber-type work-in-progress)
+                                      new-props)
+               (unless (equal (fiber-ref current) (fiber-ref work-in-progress))
+                 (mark-ref work-in-progress))))
+         (bubble-properties work-in-progress)
+         nil)))))
 
 (declaim (ftype (function (fiber) t) complete-unit-of-unit))
 (defun complete-unit-of-work (unit-of-work)

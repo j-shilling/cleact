@@ -1,8 +1,5 @@
 (in-package :cleact.reconsiler)
 
-(eval-when (:compile-toplevel)
-  )
-
 (defclass fiber ()
   ((tag :accessor fiber-tag
         :initarg :tag
@@ -16,6 +13,10 @@
           :initarg :flags
           :initform (make-hash-table)
           :type hash-table)
+   (subtree-flags :accessor fiber-subtree-flags
+                  :initarg :flags
+                  :initform (make-hash-table)
+                  :type hash-table)
    (key :accessor fiber-key
         :initarg :key
         :initform nil
@@ -24,6 +25,14 @@
           :initarg :index
           :initform (error "index is required")
           :type (integer 0 *))
+   (state-node :accessor fiber-state-node
+               :initarg :state-node
+               :initform nil
+               :type t)
+   (update-queue :accessor fiber-update-queue
+                 :initarg :update-queue
+                 :initform nil
+                 :type t)
    (memoized-props :accessor fiber-memoized-props
                    :initarg :memoized-props
                    :initform nil
@@ -49,9 +58,9 @@
            :initform nil
            :type (or null fiber))
    (child :accessor fiber-child
-           :initarg :child
-           :initform nil
-           :type (or null fiber))
+          :initarg :child
+          :initform nil
+          :type (or null fiber))
    (sibling :accessor fiber-sibling
             :initarg :sibling
             :initform nil
@@ -69,9 +78,25 @@
 (defun fiber-remove-flag (fiber flag)
   (remhash flag (fiber-flags fiber)))
 
+(declaim (ftype (function (fiber fiber-flag) t) fiber-set-subtree-flag))
+(defun fiber-set-subtree-flag (fiber subtree-flag)
+  (setf (gethash subtree-flag (fiber-subtree-flags fiber)) t))
+
+(declaim (ftype (function (fiber fiber-flag) t) fiber-check-subtree-flag))
+(defun fiber-check-subtree-flag (fiber subtree-flag)
+  (gethash subtree-flag (fiber-subtree-flags fiber)))
+
+(declaim (ftype (function (fiber fiber-flag) t) fiber-remove-subtree-flag))
+(defun fiber-remove-subtree-flag (fiber subtree-flag)
+  (remhash subtree-flag (fiber-subtree-flags fiber)))
+
 (declaim (ftype (function (fiber) t) fiber-clear-flags))
 (defun fiber-clear-flags (fiber)
   (setf (fiber-flags fiber) (make-hash-table)))
+
+(declaim (ftype (function (fiber) t) fiber-clear-subtree-flags))
+(defun fiber-clear-subtree-flags (fiber)
+  (setf (fiber-subtree-flags fiber) (make-hash-table)))
 
 (declaim (ftype (function (fiber t) fiber) create-work-in-progress))
 (defun create-work-in-progress (current pending-props)
