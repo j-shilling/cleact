@@ -1,30 +1,41 @@
 (in-package :cleact.core)
 
-(deftype cleact-element-type ()
-  'symbol)
+(eval-when (:compile-toplevel)
+  (unless (boundp '+reserved-props+)
+    (defconstant +reserved-props+
+      '(key ref children)))
+  (unless (boundp '+element-types+)
+    (defconstant +element-types+
+      '())
+
+    (defun element-type-p (obj)
+      (member obj +element-types+))
+
+    (deftype element-type ()
+      '(satisfies element-type-p))))
 
 (deftype cleact-element-children ()
-  '(or null string (array cleact-element)))
+  '(or null string (array element)))
 
-(defconstant +reserved-props+
-  '(key ref children))
-
-(defclass cleact-element ()
-  ((type :reader cleact-element-type
+(defclass element ()
+  ((type :reader element-type
          :initarg :type
          :initform (error "Type is required.")
          :type element-type)
-   (props :reader cleact-element-props
+   (props :reader element-props
           :initarg :props
           :initform '()
           :type association-list)
-   (key :reader cleact-element-key
+   (key :reader element-key
         :initarg :key
         :initform nil
         :type (or null symbol))
-   (ref  :reader cleact-element-ref
+   (ref  :reader element-ref
          :initarg :ref
          :initform nil)))
+
+(defun elementp (obj)
+  (typep obj 'element))
 
 (declaim (ftype (function (cleact-element) cleact-element-children) cleact-element-children))
 (defun cleact-element-children (element)

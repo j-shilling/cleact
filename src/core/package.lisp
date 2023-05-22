@@ -6,4 +6,7 @@
                 #:association-list)
   (:export element
            elementp
-           element-type))
+           element-type
+           element-key
+           element-props
+           element-ref))

@@ -1,5 +1,5 @@
 (defpackage :cleact.reconsiler
-  (:use :cl)
+  (:use :cl :cleact.core)
   (:import-from #:access
                 #:access)
   (:import-from #:trivial-types

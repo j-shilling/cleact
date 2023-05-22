@@ -1,34 +1,7 @@
 (in-package :cleact.reconsiler)
 
 (eval-when (:compile-toplevel)
-  (unless (boundp '+fiber-tags+)
-    (defconstant +fiber-tags+
-      '(functional-component
-        host-component
-        host-text)))
-
-  (unless (boundp '+fiber-flags+)
-    (defconstant +fiber-flags+
-      '(content-reset
-        ref
-        ref-static
-        child-deletion
-        placement)))
-
-  (defun fiber-tag-p (tag)
-    (member tag +fiber-tags+))
-
-  (defun fiber-flag-p (flag)
-    (member flag +fiber-flags+))
-
-  (deftype fiber-tag ()
-    '(satisfies fiber-tag-p))
-
-  (deftype fiber-flag ()
-    '(satisfies fiber-flag-p))
-
-  (deftype fiber-type ()
-    'symbol))
+  )
 
 (defclass fiber ()
   ((tag :accessor fiber-tag
@@ -109,4 +82,9 @@
 (declaim (ftype (function (string) fiber) create-fiber-from-text) )
 (defun create-fiber-from-text (text-content)
   (declare (ignore text-content))
+  (error "not implemented"))
+
+(declaim (ftype (function (element) fiber) create-fiber-from-element))
+(defun create-fiber-from-element (element)
+  (declare (ignore element))
   (error "not implemented"))
