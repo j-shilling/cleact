@@ -5,4 +5,8 @@
   (:import-from #:trivial-types
                 #:association-list)
   (:import-from #:alexandria
-                #:hash-table-keys))
+                #:hash-table-keys)
+  (:export create-container
+           update-container
+           renderer
+           fiber-type))
