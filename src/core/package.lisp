@@ -9,4 +9,6 @@
            element-type
            element-key
            element-props
-           element-ref))
+           element-ref
+           enable-jsx
+           disable-jsx))

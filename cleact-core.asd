@@ -4,7 +4,8 @@
   :license "Public Domain"
   :depends-on (:access
                :trivial-types
-               :plump)
+               :plump
+               :log4cl)
   :components ((:module "src/core"
                 :components
                 ((:file "package")

@@ -1,10 +1,40 @@
 (in-package :cleact.core)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *readtable-stack* nil)
+  (defvar *saved-readtable* nil)
 
   (define-condition jsx-error ()
     ((message :initarg :message :reader jsx-error-message)))
+
+  (defun string-to-keyword (str)
+    (read-from-string (concatenate 'string ":" str)))
+
+  (defun expand-jsx-string (str)
+    (labels ((emptyp (obj)
+               (and (typep obj 'sequence)
+                    (= 0 (length obj))))
+             (empty-string-p (obj)
+               (and (stringp obj)
+                    (emptyp obj)))
+             (expand-string (str)
+               (declare (type string str))
+               (let ((result str))
+                 (cl-ppcre:register-groups-bind (expr)
+                     ("\\{([^\\}]+)\\}" str)
+                   (declare (type string expr))
+                   (setf result (read-from-string expr)))
+                 result)))
+      (let* ((parts (cl-ppcre:split "(\\{[^\\}]*\\})" str :with-registers-p t))
+             (expanded (map 'list #'expand-string parts))
+             (filtered (remove-if #'empty-string-p expanded)))
+        (if (cdr filtered) ; if more than 1 element
+            `(concatenate 'string ,@filtered)
+            (car filtered)))))
+
+  (defun plump-node-to-props (obj)
+    (loop for key being the hash-keys of obj
+            using (hash-value value)
+          collect `(,(string-to-keyword key) . ,value)))
 
   (defun plump-node-to-lisp (obj)
     (log:debug "Converting DOM element to Lisp form" obj)
@@ -12,7 +42,7 @@
       (plump:text-node
        (plump:text obj))
       (plump:element
-       (let ((type (read-from-string (concatenate 'string ":" (plump:tag-name obj))))
+       (let ((type (string-to-keyword (plump:tag-name obj)))
              (props (alexandria:hash-table-alist (plump:attributes obj)))
              (children (map 'list #'plump-node-to-lisp (plump:children obj))))
          `(create-element ,type ',props
@@ -40,18 +70,26 @@
                           (length children))))))
 
   (defun read-jsx (stream char)
-    (log:debug "Starting to read JSX")
     (unread-char char stream)
     (parse-jsx-dom (plump:parse stream)))
 
   (defmacro enable-jsx ()
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (push *readtable* *readtable-stack*)
-       (setf *readtable* (copy-readtable))
-       (set-macro-character #\< 'read-jsx)))
+       (unless *saved-readtable*
+         (setf *saved-readtable* *readtable*)
+         (setf *readtable* (copy-readtable))
+         (set-macro-character #\< 'read-jsx)
+         (log:debug "JSX reading enabled"))))
 
   (defmacro disable-jsx ()
     `(eval-when (:compile-toplevel :load-toplevel :execute)
-       (let ((rt (pop *readtable-stack*)))
-         (when rt
-           (setf *readtable* rt))))))
+       (when *saved-readtable*
+         (setf *readtable* *saved-readtable*)
+         (setf *saved-readtable* nil)
+         (log:debug "JSX reading disabled"))))
+
+  (defmacro with-jsx (&body body)
+    `(progn
+       (enable-jsx)
+       ,@body
+       (disable-jsx))))
