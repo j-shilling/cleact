@@ -14,14 +14,14 @@
       (plump:element
        (let ((type (read-from-string (concatenate 'string ":" (plump:tag-name obj))))
              (props (alexandria:hash-table-alist (plump:attributes obj)))
-             (children (map 'vector #'plump-node-to-lisp (plump:children obj))))
-         (create-element type props
-                         (cond
-                           ((= 0 (length children))
-                            nil)
-                           ((= 1 (length children))
-                            (aref children 0))
-                           (t children)))))
+             (children (map 'list #'plump-node-to-lisp (plump:children obj))))
+         `(create-element ,type ',props
+           ,(cond
+              ((= 0 (length children))
+               nil)
+              ((= 1 (length children))
+               (car children))
+              (t children)))))
       (t
        (log:warn "Not a valid plump type" obj)
        obj)))
