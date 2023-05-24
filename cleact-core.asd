@@ -3,9 +3,11 @@
   :author "Jake Shilling"
   :license "Public Domain"
   :depends-on (:access
-               :trivial-types)
+               :trivial-types
+               :plump)
   :components ((:module "src/core"
                 :components
                 ((:file "package")
-                 (:file "element"))))
+                 (:file "element")
+                 (:file "jsx"))))
   :description "")

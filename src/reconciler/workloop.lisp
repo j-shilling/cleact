@@ -1,10 +1,12 @@
 (in-package :cleact.reconsiler)
 
+(require :types "types.lisp")
+
 ;;
 ;; Dynamic Environment
 ;;
 
-(declaim (type nullable-fiber *work-in-progress*))
+(declaim (type (nullable fiber) *work-in-progress*))
 (defvar *work-in-progress* nil)
 
 (declaim (type boolean *did-receive-update*))

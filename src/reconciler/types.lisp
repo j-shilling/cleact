@@ -1,6 +1,6 @@
 (in-package :cleact.reconsiler)
 
-(eval-when (:compile-toplevel)
+(eval-when (:compile-toplevel :load-toplevel :execute)
   (defun non-empty-string-p (obj)
     (and (stringp obj)
          (< 0 (length obj))))
@@ -71,3 +71,5 @@
 
   (deftype nullable-fiber ()
     '(nullable fiber)))
+
+(provide :types)
