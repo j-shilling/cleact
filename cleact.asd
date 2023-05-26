@@ -5,4 +5,7 @@
   :depends-on (:cleact-core
                :cleact-reconciler
                :cleact-clog-renderer)
+  :components ((:module "src/"
+                :components
+                ((:file "package"))))
   :description "")

@@ -1,4 +1,4 @@
-(in-package :cleact.reconsiler)
+(in-package :cleact.reconciler)
 
 (defclass renderer ()
   ((should-set-text-content-p :reader renderer-should-set-text-content-p

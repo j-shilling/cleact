@@ -6,5 +6,7 @@
                :clog)
   :components ((:module "src/clog-renderer"
                 :components
-                ((:file "package"))))
+                ((:file "package")
+                 (:file "interface")
+                 (:file "render"))))
   :description "")

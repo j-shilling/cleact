@@ -1,4 +1,4 @@
-(in-package :cleact.reconsiler)
+(in-package :cleact.reconciler)
 
 (deftype functional-component (&optional (props t))
   `(function (,props) t))

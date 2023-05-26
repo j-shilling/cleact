@@ -10,5 +10,6 @@
            element-key
            element-props
            element-ref
+           create-element
            enable-jsx
            disable-jsx))

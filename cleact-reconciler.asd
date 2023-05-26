@@ -14,5 +14,6 @@
                  (:file "renderer")
                  (:file "child-reconciler")
                  (:file "hooks")
+                 (:file "reconciler")
                  (:file "workloop"))))
   :description "")

@@ -1,12 +1,20 @@
 (in-package :cleact.core)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (defvar *saved-readtable* nil)
+  (defvar *saved-readtable* nil
+    "Saves the previous readtable when the JSX enabled one us activated.")
 
   (define-condition jsx-error ()
-    ((message :initarg :message :reader jsx-error-message)))
+    ((message :initarg :message :reader jsx-error-message))
+    (:documentation
+     "Signals an error during JSX parsing."))
+
+  (define-condition not-jsx () ()
+    (:documentation
+     "Signals that something not JSX was read when JSX was expected."))
 
   (defun string-to-keyword (str)
+    "Prefix STR with a `:' and read the result as a lisp object."
     (read-from-string (concatenate 'string ":" str)))
 
   (defun expand-jsx-string (str)
@@ -71,14 +79,36 @@
 
   (defun read-jsx (stream char)
     (unread-char char stream)
-    (parse-jsx-dom (plump:parse stream)))
+    (with-open-stream (out (make-string-output-stream))
+      (with-open-stream (echo (make-echo-stream stream out))
+        (handler-case
+            (let ((root (plump:parse echo)))
+              (unless (and (plump:root-p root)
+                           (> (length (plump:children root)) 0)
+                           (not (plump:text-node-p (aref (plump:children root) 0))))
+                (error 'not-jsx))
+              (parse-jsx-dom root))
+          (not-jsx ()
+            (let ((*readtable* (or *saved-readtable* *readtable*))
+                  (backed-up-chars (get-output-stream-string out)))
+              (log:debug "Some non-jsx was intercepted by the JSX reader"
+                         backed-up-chars)
+              (read (make-concatenated-stream
+                     (make-string-input-stream backed-up-chars)
+                     stream))))))))
+
+  (let ((cache))
+    (defun make-jsx-readtable ()
+      (unless cache
+        (setf cache (copy-readtable))
+        (set-macro-character #\< 'read-jsx))
+      cache))
 
   (defmacro enable-jsx ()
     `(eval-when (:compile-toplevel :load-toplevel :execute)
        (unless *saved-readtable*
          (setf *saved-readtable* *readtable*)
-         (setf *readtable* (copy-readtable))
-         (set-macro-character #\< 'read-jsx)
+         (setf *readtable* (make-jsx-readtable))
          (log:debug "JSX reading enabled"))))
 
   (defmacro disable-jsx ()
@@ -86,10 +116,4 @@
        (when *saved-readtable*
          (setf *readtable* *saved-readtable*)
          (setf *saved-readtable* nil)
-         (log:debug "JSX reading disabled"))))
-
-  (defmacro with-jsx (&body body)
-    `(progn
-       (enable-jsx)
-       ,@body
-       (disable-jsx))))
+         (log:debug "JSX reading disabled")))))

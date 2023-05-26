@@ -1,4 +1,4 @@
-(in-package :cleact.reconsiler)
+(in-package :cleact.reconciler)
 
 (declaim (ftype (function (renderer t) t) create-container))
 (defun create-container (renderer host-container)

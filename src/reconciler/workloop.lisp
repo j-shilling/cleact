@@ -1,4 +1,4 @@
-(in-package :cleact.reconsiler)
+(in-package :cleact.reconciler)
 
 (require :types "types.lisp")
 

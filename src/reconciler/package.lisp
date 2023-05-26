@@ -1,4 +1,4 @@
-(defpackage :cleact.reconsiler
+(defpackage :cleact.reconciler
   (:use :cl :cleact.core)
   (:import-from #:access
                 #:access)

@@ -1,4 +1,4 @@
-(in-package :cleact.reconsiler)
+(in-package :cleact.reconciler)
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defun non-empty-string-p (obj)

@@ -1,5 +1,5 @@
 (defpackage :cleact.clog-renderer
-  (:use :cl :clog :cleact.core :cleact.reconsiler)
+  (:use :cl :clog :cleact.core :cleact.reconciler)
   (:import-from #:trivial-types
                 #:association-list)
   (:import-from #:access
