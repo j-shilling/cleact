@@ -15,5 +15,8 @@
   (initialize
    'on-new-window
    :static-root
-   "./www/")
+   (merge-pathnames
+    "./www/"
+    (asdf:system-source-directory
+     :cleact-example)))
   (open-browser))

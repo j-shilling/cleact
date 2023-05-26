@@ -5,7 +5,7 @@
   (:import-from #:trivial-types
                 #:association-list)
   (:export element
-           elementp
+           element-p
            element-type
            element-key
            element-props

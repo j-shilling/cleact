@@ -77,7 +77,7 @@
 (declaim (ftype (function (fiber nullable-fiber element) fiber) update-element))
 (defun update-element (parent current element)
   (let* ((type (element-type element))
-         (result (if (and current (eq type (element-type current)))
+         (result (if (and current (eq type (element-type element)))
                      (use-fiber current (element-props element))
                      (create-fiber-from-element element))))
     (setf (fiber-ref result) (coerce-ref parent current element))
@@ -90,7 +90,7 @@
     (cond
       ((text-content-p new-child)
        (setf result (create-fiber-from-text (princ-to-string new-child))))
-      ((elementp new-child)
+      ((element-p new-child)
        (setf result (create-fiber-from-element new-child))))
     (when result
       (setf (fiber-parent result) parent))
@@ -103,7 +103,7 @@
     (cond
       ((and (not key) (text-content-p new-child))
        (setf result (update-text-node parent old-fiber (coerce-text-content new-child))))
-      ((and (elementp new-child) (eq key (element-key new-child)))
+      ((and (element-p new-child) (eq key (element-key new-child)))
        (setf result (update-element parent old-fiber new-child))))
     result))
 
@@ -115,7 +115,7 @@
           (cond
             ((text-content-p new-child)
              `(,new-index ,(princ-to-string new-child) ,#'update-text-node))
-            ((elementp new-child)
+            ((element-p new-child)
              `(,(or (element-key new-child) new-index) ,new-child ,#'update-element))
             (t (throw 'no-update nil)))
         (setf result
@@ -260,7 +260,7 @@
 (declaim (ftype (function (fiber nullable-fiber t) nullable-fiber) reconcile-child-fibers-impl))
 (defun reconcile-child-fibers-impl (parent current-first-child new-child)
   (cond
-    ((elementp new-child)
+    ((element-p new-child)
      (place-single-child
       (reconcile-single-element parent current-first-child new-child)))
     ((and (typep new-child 'sequence)
