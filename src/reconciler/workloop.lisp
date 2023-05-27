@@ -200,6 +200,12 @@
   (declare (ignore work-in-progress))
   (error "not implemented"))
 
+(declaim (ftype (function (fiber-root-node fiber) t) schedule-update-on-fiber))
+(defun schedule-update-on-fiber (root fiber)
+  (declare (ignore root))
+  (declare (ignore fiber))
+  (error "not implemented"))
+
 (defun work-loop ()
   (loop while *work-in-progress*
         do (perform-unit-of-work *work-in-progress*)))

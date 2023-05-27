@@ -5,7 +5,8 @@
   :depends-on (:cleact-core
                :alexandria
                :log4cl
-               :access)
+               :access
+               :cl-containers)
   :components ((:module "src/reconciler/"
                 :components
                 ((:file "package")

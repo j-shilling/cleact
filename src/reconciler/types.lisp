@@ -33,7 +33,8 @@
     (defconstant +fiber-tags+
       '(functional-component
         host-component
-        host-text)))
+        host-text
+        host-root)))
 
   (unless (boundp '+fiber-flags+)
     (defconstant +fiber-flags+

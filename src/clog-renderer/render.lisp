@@ -17,9 +17,6 @@
 
 (declaim (ftype (function (element clog-element) t) render))
 (defun render (element container)
-  ;; Clear any existing contents from container
   (remove-all-children container)
-  ;; create a reconciler-container
-  (create-container *renderer* container)
-  ;; updatecontainer
-  (update-container element container))
+  (let ((fiber-container (create-container *renderer* container)))
+    (update-container element fiber-container)))

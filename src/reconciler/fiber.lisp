@@ -1,70 +1,23 @@
 (in-package :cleact.reconciler)
 
-(defclass fiber ()
-  ((tag :accessor fiber-tag
-        :initarg :tag
-        :initform (error "tag is required")
-        :type fiber-tag)
-   (type :accessor fiber-type
-         :initarg :type
-         :initform (error "type is required")
-         :type fiber-type)
-   (flags :accessor fiber-flags
-          :initarg :flags
-          :initform (make-hash-table)
-          :type hash-table)
-   (subtree-flags :accessor fiber-subtree-flags
-                  :initarg :flags
-                  :initform (make-hash-table)
-                  :type hash-table)
-   (key :accessor fiber-key
-        :initarg :key
-        :initform nil
-        :type (or symbol null))
-   (index :accessor fiber-index
-          :initarg :index
-          :initform (error "index is required")
-          :type (integer 0 *))
-   (state-node :accessor fiber-state-node
-               :initarg :state-node
-               :initform nil
-               :type t)
-   (update-queue :accessor fiber-update-queue
-                 :initarg :update-queue
-                 :initform nil
-                 :type t)
-   (memoized-props :accessor fiber-memoized-props
-                   :initarg :memoized-props
-                   :initform nil
-                   :type (or null association-list))
-   (pending-props :accessor fiber-pending-props
-                  :initarg :pending-props
-                  :initform nil
-                  :type (or null association-list))
-   (alternate :accessor fiber-alternate
-              :initarg :alternate
-              :initform nil
-              :type (or null fiber))
-   (deletions :accessor fiber-deletions
-              :initarg :deletions
-              :initform nil
-              :type list) ; list of fibers
-   (ref :accessor fiber-ref
-        :initarg :ref
-        :initform nil
-        :type t)
-   (parent :accessor fiber-parent
-           :initarg :parent
-           :initform nil
-           :type (or null fiber))
-   (child :accessor fiber-child
-          :initarg :child
-          :initform nil
-          :type (or null fiber))
-   (sibling :accessor fiber-sibling
-            :initarg :sibling
-            :initform nil
-            :type (or null fiber))))
+(defstruct fiber
+  (tag (error "tag is required") :type fiber-tag)
+  (type nil :type (nullable fiber-type))
+  (flags (make-hash-table) :type hash-table)
+  (subtree-flags (make-hash-table) :type hash-table)
+  key
+  (index 0 :type index)
+  state-node
+  (update-queue nil :type (nullable update-queue))
+  (memoized-props nil :type association-list)
+  (memoized-state nil :type association-list)
+  (pending-props nil :type association-list)
+  (alternate nil :type nullable-fiber)
+  (deletions nil :type list) ; list of fibers
+  ref
+  (parent nil :type nullable-fiber)
+  (child nil :type nullable-fiber)
+  (sibling nil :type nullable-fiber))
 
 (declaim (ftype (function (fiber fiber-flag) t) fiber-set-flag))
 (defun fiber-set-flag (fiber flag)
@@ -103,6 +56,13 @@
   (declare (ignore current))
   (declare (ignore pending-props))
   (error "not implemented"))
+
+(declaim (ftype (function (fiber-tag association-list (nullable string)) fiber) create-fiber))
+(defun create-fiber (tag pending-props key)
+  (make-fiber
+   :tag tag
+   :pending-props pending-props
+   :key key))
 
 (declaim (ftype (function (string) fiber) create-fiber-from-text) )
 (defun create-fiber-from-text (text-content)
